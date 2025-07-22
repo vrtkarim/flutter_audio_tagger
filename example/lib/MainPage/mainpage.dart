@@ -58,7 +58,7 @@ class _MainPageState extends State<MainPage> {
     _composerController.text = tag?.composer ?? '';
     _countryController.text = tag?.country ?? '';
     _qualityController.text = tag?.quality ?? '';
-    _lyricsController.text = tag?.lyrics ?? ''; // Add this line
+    _lyricsController.text = tag?.lyrics ?? ''; 
   }
 
   Future<void> _saveChanges() async {

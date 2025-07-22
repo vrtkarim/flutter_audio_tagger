@@ -1,7 +1,7 @@
 name: flutter_audio_tagger
-description: "A new Flutter plugin project."
-version: 0.0.1
-homepage:
+description: "A Flutter plugin for reading and editing audio file metadata (tags) with support for multiple audio formats."
+version: 1.0.0
+homepage: https://github.com/vrtkarim/flutter_audio_tagger
 
 environment:
   sdk: ^3.8.1
