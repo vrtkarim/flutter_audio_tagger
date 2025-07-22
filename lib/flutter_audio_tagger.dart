@@ -20,6 +20,7 @@ class FlutterAudioTagger {
     } catch (e) {
       print(e);
     }
+    return null;
   }
 
   Future<Map<dynamic, dynamic>?> getTags(String path) async {
