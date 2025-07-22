@@ -18,7 +18,7 @@ class FlutterAudioTagger {
 
       return result;
     } catch (e) {
-      print(e);
+      //print(e);
     }
     return null;
   }
@@ -29,7 +29,7 @@ class FlutterAudioTagger {
       Map<dynamic, dynamic>? tags = result;
       return tags;
     } catch (e) {
-      print(e);
+      //print(e);
     }
   }
 
@@ -43,7 +43,7 @@ class FlutterAudioTagger {
       tag = Tag.fromMap(data);
       return tag;
     } catch (e) {
-      print(e);
+      //print(e);
     }
   }
 
@@ -59,7 +59,7 @@ class FlutterAudioTagger {
         artwork,
       );
     } catch (e) {
-      print(e);
+      //print(e);
     }
   }
 
@@ -74,7 +74,7 @@ class FlutterAudioTagger {
         artwork,
       );
     } catch (e) {
-      print(e);
+      //print(e);
     }
   }
 }
