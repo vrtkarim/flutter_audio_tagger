@@ -55,9 +55,9 @@ class FlutterAudioTagger {
       artwork['artwork'] = tag.artwork;
       artwork['filePath'] = path;
       final artworkresult = await platform.invokeMethod<String>(
-      "setArtWork",
-      artwork,
-    );
+        "setArtWork",
+        artwork,
+      );
     } catch (e) {
       print(e);
     }
@@ -77,5 +77,4 @@ class FlutterAudioTagger {
       print(e);
     }
   }
-  
 }
