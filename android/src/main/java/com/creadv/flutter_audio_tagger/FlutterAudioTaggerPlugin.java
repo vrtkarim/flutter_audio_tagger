@@ -113,43 +113,47 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 AudioFile audioFile = AudioFileIO.read(originalFile);
                 Tag tag = audioFile.getTag();
                 File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                if (artist != null && !artist.trim().isEmpty()) {
+                if(filePath == null){
+                  result.error("No specified path",  "please specify the music file path.", "");
+                  return;
+                }
+                if (artist != null) {
                     tag.deleteField(FieldKey.ARTIST);
                     tag.setField(FieldKey.ARTIST, artist);
                 }
-                if (lyrics != null && !lyrics.trim().isEmpty()) {
+                if (lyrics != null ) {
                     tag.deleteField(FieldKey.LYRICS);
                     tag.setField(FieldKey.LYRICS, lyrics);
                 }
-                if (title != null && !title.trim().isEmpty()) {
+                if (title != null) {
                     tag.deleteField(FieldKey.TITLE);
                     tag.setField(FieldKey.TITLE, title);
                 }
-                if (album != null && !album.trim().isEmpty()) {
+                if (album != null) {
                     tag.deleteField(FieldKey.ALBUM);
                     tag.setField(FieldKey.ALBUM, album);
                 }
-                if (year != null && !year.trim().isEmpty()) {
+                if (year != null) {
                     tag.deleteField(FieldKey.YEAR);
                     tag.setField(FieldKey.YEAR, year);
                 }
-                if (genre != null && !genre.trim().isEmpty()) {
+                if (genre != null) {
                     tag.deleteField(FieldKey.GENRE);
                     tag.setField(FieldKey.GENRE, genre);
                 }
-                if (language != null && !language.trim().isEmpty()) {
+                if (language != null) {
                     tag.deleteField(FieldKey.LANGUAGE);
                     tag.setField(FieldKey.LANGUAGE, language);
                 }
-                if (composer != null && !composer.trim().isEmpty()) {
+                if (composer != null) {
                     tag.deleteField(FieldKey.COMPOSER);
                     tag.setField(FieldKey.COMPOSER, composer);
                 }
-                if (country != null && !country.trim().isEmpty()) {
+                if (country != null) {
                     tag.deleteField(FieldKey.COUNTRY);
                     tag.setField(FieldKey.COUNTRY, country);
                 }
-                if (quality != null && !quality.trim().isEmpty()) {
+                if (quality != null) {
                     tag.deleteField(FieldKey.QUALITY);
                     tag.setField(FieldKey.QUALITY, quality);
                 }

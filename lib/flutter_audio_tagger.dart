@@ -48,7 +48,7 @@ class FlutterAudioTagger {
 
   Future<void> editTags(Tag tag, String path) async {
     try {
-      Map<String, String> tags = Tag.createMapWithPath(tag, path);
+      Map<String, String?> tags = Tag.createMapWithPath(tag, path);
       final result = await platform.invokeMethod<String>('setTags', tags);
       Map<String, dynamic> artwork = Map();
       artwork['artwork'] = tag.artwork;

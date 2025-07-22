@@ -7,7 +7,6 @@ A Flutter plugin for reading and editing audio file metadata (tags) with support
 - **Read metadata** from audio files
 - **Edit metadata** fields including artwork
 - **Support for multiple audio formats**
-- **Cross-platform** (Android support, iOS coming soon)
 - **Easy to use** with a simple Tag data model
 
 ## Supported Audio Formats
