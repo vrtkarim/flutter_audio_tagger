@@ -52,11 +52,11 @@ class FlutterAudioTagger {
   Future<void> editTags(Tag tag, String path) async {
     try {
       Map<String, String?> tags = Tag.createMapWithPath(tag, path);
-      final result = await platform.invokeMethod<String>('setTags', tags);
+       await platform.invokeMethod<String>('setTags', tags);
       Map<String, dynamic> artwork = Map();
       artwork['artwork'] = tag.artwork;
       artwork['filePath'] = path;
-      final artworkresult = await platform.invokeMethod<String>(
+      await platform.invokeMethod<String>(
         "setArtWork",
         artwork,
       );
@@ -71,7 +71,7 @@ class FlutterAudioTagger {
       artwork['artwork'] = imagepath;
       artwork['filePath'] = path;
 
-      final artworkresult = await platform.invokeMethod<String>(
+      await platform.invokeMethod<String>(
         "setArtWork",
         artwork,
       );
