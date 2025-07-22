@@ -1,15 +1,32 @@
 package com.creadv.flutter_audio_tagger;
 
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.util.Log;
+
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
 import androidx.annotation.NonNull;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.images.ArtworkFactory;
+import org.jaudiotagger.tag.reference.PictureTypes;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
@@ -17,73 +34,212 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 
-/** FlutterAudioTaggerPlugin */
+/**
+ * FlutterAudioTaggerPlugin
+ */
 public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandler {
-  /// The MethodChannel that will the communication between Flutter and native Android
-  ///
-  /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-  /// when the Flutter Engine is detached from the Activity
-  private MethodChannel channel;
-
-  @Override
-  public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(),"com.creadv.audiotagger/audiotagger");
-    channel.setMethodCallHandler(this);
-  }
-
-  @Override
-  public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
-    } else if(call.method.equals("getArtWork")){
-              
-                try {
-                    File music = new File((String) call.arguments);
-                    AudioFile audioFile = AudioFileIO.read(music);
-                    Tag tag = audioFile.getTag();
-                    byte[] artwork = tag.getFirstArtwork().getBinaryData();
-                    result.success(artwork);
-                }catch (Exception e){
-                    result.error("ArtworkError", e.getMessage(), e.getCause());
-                    System.out.println("error : "+e);
-
-                }
-            }else if(call.method.equals("getTags")){
-              try{
-                    File music = new File((String) call.arguments);
-                    AudioFile audioFile = AudioFileIO.read(music);
-                    Tag tag = audioFile.getTag();
-                    Map<String, String> data = new HashMap<>();
-                    String artist = tag.getFirst(FieldKey.ARTIST);
-                    data.put("artist",artist);
-                    data.put("title",tag.getFirst(FieldKey.TITLE));
-                    data.put("album",tag.getFirst(FieldKey.ALBUM));
-                    data.put("year",tag.getFirst(FieldKey.YEAR));
-                    data.put("genre",tag.getFirst(FieldKey.GENRE));
-                    data.put("language",tag.getFirst(FieldKey.LANGUAGE));
-                    data.put("composer",tag.getFirst(FieldKey.COMPOSER));
-                    data.put("country",tag.getFirst(FieldKey.COUNTRY) );
-                    data.put("artwork",tag.getFirst(FieldKey.LYRICS) );
-                    data.put("quality",tag.getFirst(FieldKey.QUALITY) );
-                    System.out.println("artist: " +artist);
-                    result.success(data);
-                }catch (Exception e){
-                    result.error("TagsError", e.getMessage(), e.getCause());
-                    System.out.println("error : "+e);
+    /// The MethodChannel that will the communication between Flutter and native Android
+    ///
+    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
+    /// when the Flutter Engine is detached from the Activity
+    private MethodChannel channel;
+    private Context context;
 
 
-                }
-            }
-    
-    
-    
-    else {
-      result.notImplemented();
+    @Override
+    public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "com.creadv.audiotagger/audiotagger");
+        channel.setMethodCallHandler(this);
+        context = flutterPluginBinding.getApplicationContext();
     }
-  }
 
-  @Override
-  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    channel.setMethodCallHandler(null);
-  }
+    @Override
+    public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
+        if (call.method.equals("getPlatformVersion")) {
+            result.success("Android " + android.os.Build.VERSION.RELEASE);
+        } else if (call.method.equals("getArtWork")) {
+            try {
+                File music = new File((String) call.arguments);
+
+                AudioFile audioFile = AudioFileIO.read(music);
+                Tag tag = audioFile.getTag();
+                byte[] artwork = tag.getFirstArtwork().getBinaryData();
+                result.success(artwork);
+            } catch (Exception e) {
+                result.error("ArtworkError", e.getMessage(), e.getCause());
+                System.out.println("error : " + e);
+
+            }
+        } else if (call.method.equals("getTags")) {
+            try {
+                File music = new File((String) call.arguments);
+                AudioFile audioFile = AudioFileIO.read(music);
+                Tag tag = audioFile.getTag();
+                Map<String, String> data = new HashMap<>();
+                String artist = tag.getFirst(FieldKey.ARTIST);
+                data.put("artist", artist);
+                data.put("title", tag.getFirst(FieldKey.TITLE));
+                data.put("album", tag.getFirst(FieldKey.ALBUM));
+                data.put("year", tag.getFirst(FieldKey.YEAR));
+                data.put("genre", tag.getFirst(FieldKey.GENRE));
+                data.put("language", tag.getFirst(FieldKey.LANGUAGE));
+                data.put("composer", tag.getFirst(FieldKey.COMPOSER));
+                data.put("country", tag.getFirst(FieldKey.COUNTRY));
+                data.put("lyrics", tag.getFirst(FieldKey.LYRICS));
+                data.put("quality", tag.getFirst(FieldKey.QUALITY));
+
+                result.success(data);
+            } catch (Exception e) {
+                result.error("TagsError", e.getMessage(), e.getCause());
+                System.out.println("error : " + e);
+
+
+            }
+        } else if (call.method.equals("setTags")) {
+            try {
+                Map<String, Object> arguments = (Map<String, Object>) call.arguments;
+                String filePath = (String) arguments.get("filePath");
+                String artist = (String) arguments.get("artist");
+                String title = (String) arguments.get("title");
+                String album = (String) arguments.get("album");
+                String year = (String) arguments.get("year");
+                String genre = (String) arguments.get("genre");
+                String language = (String) arguments.get("language");
+                String composer = (String) arguments.get("composer");
+                String country = (String) arguments.get("country");
+                String quality = (String) arguments.get("quality");
+
+                File originalFile = new File(filePath);
+                AudioFile audioFile = AudioFileIO.read(originalFile);
+                Tag tag = audioFile.getTag();
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                if (artist != null && !artist.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.ARTIST);
+                    tag.setField(FieldKey.ARTIST, artist);
+                }
+                if (title != null && !title.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.TITLE);
+                    tag.setField(FieldKey.TITLE, title);
+                }
+                if (album != null && !album.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.ALBUM);
+                    tag.setField(FieldKey.ALBUM, album);
+                }
+                if (year != null && !year.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.YEAR);
+                    tag.setField(FieldKey.YEAR, year);
+                }
+                if (genre != null && !genre.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.GENRE);
+                    tag.setField(FieldKey.GENRE, genre);
+                }
+                if (language != null && !language.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.LANGUAGE);
+                    tag.setField(FieldKey.LANGUAGE, language);
+                }
+                if (composer != null && !composer.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.COMPOSER);
+                    tag.setField(FieldKey.COMPOSER, composer);
+                }
+                if (country != null && !country.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.COUNTRY);
+                    tag.setField(FieldKey.COUNTRY, country);
+                }
+                if (quality != null && !quality.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.QUALITY);
+                    tag.setField(FieldKey.QUALITY, quality);
+                }
+                audioFile.setTag(tag);
+                AudioFileIO.write(audioFile);
+                File testFile2 = new File(downloadsDir, addEditedSuffix(filePath));
+                try {
+                    FileOutputStream fos = new FileOutputStream(testFile2);
+                    byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
+                    fos.write(music_data);
+                    fos.close();
+
+
+                } catch (Exception e) {
+                    result.error("SetTagsError", e.getMessage(), e.getCause());
+                }
+
+
+                result.success("File saved");
+
+            } catch (Exception e) {
+                result.error("SetTagsError", e.getMessage(), e.getCause());
+                Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
+            }
+        } else if (call.method.equals("setArtWork")) {
+            try {
+                Map<String, Object> arguments = (Map<String, Object>) call.arguments;
+                // data
+                String filePath = (String) arguments.get("filePath");
+                byte[] artworkData = (byte[]) arguments.get("artwork");
+                // process
+                if (filePath != null && artworkData !=null){
+                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    File audioFile = new File(filePath);
+                    AudioFile f = AudioFileIO.read(audioFile);
+                    Tag tag = f.getTag();
+                    Artwork artwork = ArtworkFactory.createArtworkFromFile(audioFile);
+                    artwork.setBinaryData(artworkData);
+                    artwork.setMimeType("image/jpeg");
+                    artwork.setPictureType(PictureTypes.DEFAULT_ID);
+                    tag.deleteArtworkField();
+                    tag.setField(artwork);
+                    f.setTag(tag);
+                    AudioFileIO.write(f);
+                    File testFile2 = new File(downloadsDir, addEditedSuffix(filePath));
+                    try {
+                        FileOutputStream fos = new FileOutputStream(testFile2);
+                        byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
+                        fos.write(music_data);
+                        fos.close();
+                    } catch (Exception e) {
+                        result.error("SetArtworkError", e.getMessage(), e.getCause());
+                    }
+
+                    result.success("Artwork set successfully");
+                }
+
+
+
+            } catch (Exception e) {
+                result.error("SetArtworkError", e.getMessage(), e.getCause());
+                Log.e("FlutterAudioTagger", "SetArtwork error: " + e.getMessage());
+            }
+        } else {
+            result.notImplemented();
+        }
+    }
+
+    @Override
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        channel.setMethodCallHandler(null);
+    }
+
+
+    private String addEditedSuffix(String filePath) {
+    // Get the file name from the full path
+    File file = new File(filePath);
+    String fileName = file.getName();
+    
+    // Find the last dot to separate name and extension
+    int lastDotIndex = fileName.lastIndexOf('.');
+    
+    if (lastDotIndex == -1) {
+        // No extension found, just add _edited at the end
+        return fileName + "_edited";
+    } else {
+        // Split the filename and extension
+        String nameWithoutExtension = fileName.substring(0, lastDotIndex);
+        String extension = fileName.substring(lastDotIndex);
+        
+        // Return name_edited.extension
+        return nameWithoutExtension + "_edited" + extension;
+    }
+}
+
+
 }

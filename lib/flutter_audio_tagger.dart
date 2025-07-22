@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -12,6 +11,7 @@ class FlutterAudioTagger {
   Future<String?> getPlatformVersion() {
     return FlutterAudioTaggerPlatform.instance.getPlatformVersion();
   }
+
   Future<Uint8List?> getArtWork(String path) async {
     try {
       final result = await platform.invokeMethod<Uint8List>('getArtWork', path);
@@ -21,6 +21,7 @@ class FlutterAudioTagger {
       print(e);
     }
   }
+
   Future<Map<dynamic, dynamic>?> getTags(String path) async {
     try {
       final result = await platform.invokeMethod<Map>('getTags', path);
@@ -44,4 +45,36 @@ class FlutterAudioTagger {
       print(e);
     }
   }
+
+  Future<void> editTags(Tag tag, String path) async {
+    try {
+      Map<String, String> tags = Tag.createMapWithPath(tag, path);
+      final result = await platform.invokeMethod<String>('setTags', tags);
+      Map<String, dynamic> artwork = Map();
+      artwork['artwork'] = tag.artwork;
+      artwork['filePath'] = path;
+      final artworkresult = await platform.invokeMethod<String>(
+      "setArtWork",
+      artwork,
+    );
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> setArtWork(Uint8List imagepath, String path) async {
+    try {
+      Map<String, dynamic> artwork = Map();
+      artwork['artwork'] = imagepath;
+      artwork['filePath'] = path;
+
+      final artworkresult = await platform.invokeMethod<String>(
+        "setArtWork",
+        artwork,
+      );
+    } catch (e) {
+      print(e);
+    }
+  }
+  
 }

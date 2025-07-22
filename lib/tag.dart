@@ -48,4 +48,20 @@ class Tag {
   String toString() {
     return 'Tag(artist: $artist, title: $title, album: $album, year: $year, genre: $genre, language: $language, composer: $composer, country: $country, quality: $quality)';
   }
+
+  static Map<String, String> createMapWithPath(Tag tag, String filePath) {
+    return {
+      'filePath': filePath,
+      'artist': tag.artist ?? "",
+      'title': tag.title ?? "",
+      'album': tag.album ?? "",
+      'year': tag.year ?? "",
+      'genre': tag.genre?? "",
+      /* 'lyrics': tag.lyrics ?? "",  */
+      'language': tag.language?? "",
+      'composer': tag.composer?? "",
+      'country': tag.country?? "",
+      'quality': tag.quality?? "",
+    };
+  }
 }

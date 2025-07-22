@@ -2,18 +2,23 @@ group = "com.creadv.flutter_audio_tagger"
 version = "1.0"
 
 buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
+
+        repositories {
+            maven { url 'https://www.jitpack.io' }
+            google()
+            mavenCentral()
+
+        }
+    
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("com.android.tools.build:gradle:8.11.1")
     }
 }
 
 rootProject.allprojects {
     repositories {
+        maven { url 'https://www.jitpack.io' }
         google()
         mavenCentral()
     }
@@ -37,7 +42,7 @@ android {
 
     dependencies {
         testImplementation("junit:junit:4.13.2")
-        testImplementation("org.mockito:mockito-core:5.0.0")
+        testImplementation("org.mockito:mockito-core:5.18.0")
     }
 
     testOptions {
@@ -52,5 +57,5 @@ android {
 }
 dependencies {
     // https://mvnrepository.com/artifact/net.jthink/jaudiotagger
-    implementation("net.jthink:jaudiotagger:3.0.1")
+    implementation("com.github.AdrienPoupa:jaudiotagger:2.2.3")
 }
