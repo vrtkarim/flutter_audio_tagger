@@ -31,6 +31,7 @@ class FlutterAudioTagger {
     } catch (e) {
       //print(e);
     }
+    return null;
   }
 
   Future<Tag?> getAllTags(String path) async {
@@ -45,6 +46,7 @@ class FlutterAudioTagger {
     } catch (e) {
       //print(e);
     }
+    return null;
   }
 
   Future<void> editTags(Tag tag, String path) async {
