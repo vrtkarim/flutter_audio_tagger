@@ -9,7 +9,7 @@ class Tag {
   final String? language;
   final String? composer;
   final String? country;
-
+  final String? lyrics;
   final String? quality;
   final Uint8List? artwork;
 
@@ -23,7 +23,7 @@ class Tag {
     this.language,
     this.composer,
     this.country,
-
+    this.lyrics,
     this.quality,
   });
 
@@ -34,6 +34,7 @@ class Tag {
       album: map['album'] as String?,
       year: map['year'] as String?,
       genre: map['genre'] as String?,
+      lyrics: map['lyrics'] as String,
       language: map['language'] as String?,
       composer: map['composer'] as String?,
       country: map['country'] as String?,
@@ -62,6 +63,7 @@ class Tag {
       'composer': tag.composer?? "",
       'country': tag.country?? "",
       'quality': tag.quality?? "",
+      'lyrics' :tag.lyrics?? ""
     };
   }
 }

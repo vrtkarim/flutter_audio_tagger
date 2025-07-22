@@ -28,6 +28,8 @@ class _MainPageState extends State<MainPage> {
   final TextEditingController _composerController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
   final TextEditingController _qualityController = TextEditingController();
+  final TextEditingController _lyricsController =
+      TextEditingController(); // Add this line
 
   bool _isEditing = false;
 
@@ -42,6 +44,7 @@ class _MainPageState extends State<MainPage> {
     _composerController.dispose();
     _countryController.dispose();
     _qualityController.dispose();
+    _lyricsController.dispose(); // Add this line
     super.dispose();
   }
 
@@ -55,6 +58,7 @@ class _MainPageState extends State<MainPage> {
     _composerController.text = tag?.composer ?? '';
     _countryController.text = tag?.country ?? '';
     _qualityController.text = tag?.quality ?? '';
+    _lyricsController.text = tag?.lyrics ?? ''; // Add this line
   }
 
   Future<void> _saveChanges() async {
@@ -79,10 +83,16 @@ class _MainPageState extends State<MainPage> {
         quality: _qualityController.text.isEmpty
             ? null
             : _qualityController.text,
+        lyrics:
+            _lyricsController
+                .text
+                .isEmpty // Add this line
+            ? null
+            : _lyricsController.text,
         artwork: tag?.artwork,
       );
 
-      await flutterAudioTagger.editTags( updatedTag,currentFilePath!);
+      await flutterAudioTagger.editTags(updatedTag, currentFilePath!);
 
       // Refresh tags
       tag = await flutterAudioTagger.getAllTags(currentFilePath!);
@@ -113,7 +123,7 @@ class _MainPageState extends State<MainPage> {
         File imageFile = File(result.files.single.path!);
         Uint8List imageData = await imageFile.readAsBytes();
 
-        await flutterAudioTagger.setArtWork(imageData,currentFilePath!);
+        await flutterAudioTagger.setArtWork(imageData, currentFilePath!);
 
         // Refresh tags to get updated artwork
         tag = await flutterAudioTagger.getAllTags(currentFilePath!);
@@ -212,6 +222,7 @@ class _MainPageState extends State<MainPage> {
           _buildEditableInfoCard("Composer", _composerController),
           _buildEditableInfoCard("Country", _countryController),
           _buildEditableInfoCard("Quality", _qualityController),
+          _buildEditableLyricsCard(), 
         ],
       ),
     );
@@ -289,6 +300,54 @@ class _MainPageState extends State<MainPage> {
                   color: controller.text.isEmpty ? Colors.grey : null,
                 ),
               ),
+      ),
+    );
+  }
+
+  // Add this new method for lyrics (multiline text field)
+  Widget _buildEditableLyricsCard() {
+    return Card(
+      margin: EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Lyrics",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            _isEditing
+                ? TextField(
+                    controller: _lyricsController,
+                    maxLines: 6,
+                    decoration: InputDecoration(
+                      hintText: "Enter lyrics",
+                      border: OutlineInputBorder(),
+                    ),
+                  )
+                : Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _lyricsController.text.isEmpty
+                          ? "No lyrics available"
+                          : _lyricsController.text,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _lyricsController.text.isEmpty
+                            ? Colors.grey
+                            : null,
+                      ),
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }

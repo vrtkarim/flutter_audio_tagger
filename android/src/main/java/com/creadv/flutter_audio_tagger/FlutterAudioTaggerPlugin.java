@@ -76,8 +76,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 AudioFile audioFile = AudioFileIO.read(music);
                 Tag tag = audioFile.getTag();
                 Map<String, String> data = new HashMap<>();
-                String artist = tag.getFirst(FieldKey.ARTIST);
-                data.put("artist", artist);
+                data.put("artist", tag.getFirst(FieldKey.ARTIST));
                 data.put("title", tag.getFirst(FieldKey.TITLE));
                 data.put("album", tag.getFirst(FieldKey.ALBUM));
                 data.put("year", tag.getFirst(FieldKey.YEAR));
@@ -108,6 +107,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 String composer = (String) arguments.get("composer");
                 String country = (String) arguments.get("country");
                 String quality = (String) arguments.get("quality");
+                String lyrics = (String) arguments.get("lyrics");
 
                 File originalFile = new File(filePath);
                 AudioFile audioFile = AudioFileIO.read(originalFile);
@@ -116,6 +116,10 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 if (artist != null && !artist.trim().isEmpty()) {
                     tag.deleteField(FieldKey.ARTIST);
                     tag.setField(FieldKey.ARTIST, artist);
+                }
+                if (lyrics != null && !lyrics.trim().isEmpty()) {
+                    tag.deleteField(FieldKey.LYRICS);
+                    tag.setField(FieldKey.LYRICS, lyrics);
                 }
                 if (title != null && !title.trim().isEmpty()) {
                     tag.deleteField(FieldKey.TITLE);
@@ -177,7 +181,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 String filePath = (String) arguments.get("filePath");
                 byte[] artworkData = (byte[]) arguments.get("artwork");
                 // process
-                if (filePath != null && artworkData !=null){
+                if (filePath != null && artworkData != null) {
                     File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                     File audioFile = new File(filePath);
                     AudioFile f = AudioFileIO.read(audioFile);
@@ -204,7 +208,6 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 }
 
 
-
             } catch (Exception e) {
                 result.error("SetArtworkError", e.getMessage(), e.getCause());
                 Log.e("FlutterAudioTagger", "SetArtwork error: " + e.getMessage());
@@ -221,25 +224,25 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
 
 
     private String addEditedSuffix(String filePath) {
-    // Get the file name from the full path
-    File file = new File(filePath);
-    String fileName = file.getName();
-    
-    // Find the last dot to separate name and extension
-    int lastDotIndex = fileName.lastIndexOf('.');
-    
-    if (lastDotIndex == -1) {
-        // No extension found, just add _edited at the end
-        return fileName + "_edited";
-    } else {
-        // Split the filename and extension
-        String nameWithoutExtension = fileName.substring(0, lastDotIndex);
-        String extension = fileName.substring(lastDotIndex);
-        
-        // Return name_edited.extension
-        return nameWithoutExtension + "_edited" + extension;
+        // Get the file name from the full path
+        File file = new File(filePath);
+        String fileName = file.getName();
+
+        // Find the last dot to separate name and extension
+        int lastDotIndex = fileName.lastIndexOf('.');
+
+        if (lastDotIndex == -1) {
+            // No extension found, just add _edited at the end
+            return fileName + "_edited";
+        } else {
+            // Split the filename and extension
+            String nameWithoutExtension = fileName.substring(0, lastDotIndex);
+            String extension = fileName.substring(lastDotIndex);
+
+            // Return name_edited.extension
+            return nameWithoutExtension + "_edited" + extension;
+        }
     }
-}
 
 
 }
