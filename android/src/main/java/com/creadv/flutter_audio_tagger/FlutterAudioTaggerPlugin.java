@@ -19,11 +19,11 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 
+
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.images.ArtworkFactory;
 import org.jaudiotagger.tag.reference.PictureTypes;
@@ -38,10 +38,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
  * FlutterAudioTaggerPlugin
  */
 public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandler {
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
+
     private MethodChannel channel;
     private Context context;
 
@@ -228,22 +225,16 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
 
 
     private String addEditedSuffix(String filePath) {
-        // Get the file name from the full path
         File file = new File(filePath);
         String fileName = file.getName();
-
-        // Find the last dot to separate name and extension
         int lastDotIndex = fileName.lastIndexOf('.');
 
         if (lastDotIndex == -1) {
-            // No extension found, just add _edited at the end
             return fileName + "_edited";
         } else {
-            // Split the filename and extension
+
             String nameWithoutExtension = fileName.substring(0, lastDotIndex);
             String extension = fileName.substring(lastDotIndex);
-
-            // Return name_edited.extension
             return nameWithoutExtension + "_edited" + extension;
         }
     }

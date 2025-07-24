@@ -57,5 +57,5 @@ android {
 }
 dependencies {
     // https://mvnrepository.com/artifact/net.jthink/jaudiotagger
-    implementation("com.github.AdrienPoupa:jaudiotagger:2.2.3")
+    implementation("net.jthink:jaudiotagger:3.0.1")
 }

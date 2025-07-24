@@ -1,3 +1,3 @@
-## 1.0.0
+## 1.0.1
 
-* Initial release, many improvements are coming soon Inchaellah.
+* many audio formats are supported now, some improvements are coming soon inchaellah
