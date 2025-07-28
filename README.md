@@ -12,6 +12,13 @@ A Flutter plugin for reading and editing audio file metadata (tags) with support
 ## Supported Audio Formats
 
 - **MP3** (.mp3)
+- **MP4 Audio** (.mp4, .m4a, .m4p)
+- **Ogg Vorbis** (.ogg)
+- **FLAC** (.flac)
+- **WAV** (.wav)
+- **AIF** (.aif)
+- **DSF** (.dsf)
+- **WMA** (.wma)
 
 
 ## Supported Metadata Fields
@@ -36,7 +43,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_audio_tagger: ^1.0.0
+  flutter_audio_tagger: ^1.0.1
 ```
 
 ## Usage
