@@ -16,7 +16,6 @@ class FlutterAudioTagger {
   Future<Uint8List?> getArtWork(String path) async {
     try {
       final result = await platform.invokeMethod<Uint8List>('getArtWork', path);
-
       return result;
     } catch (e) {
       rethrow;
@@ -55,7 +54,7 @@ class FlutterAudioTagger {
       artwork['artwork'] = tag.artwork;
       artwork['filePath'] = path;
       //await platform.invokeMethod<String>("setArtWork", artwork);
-      setArtWork(tag.artwork, path);
+      await setArtWork(tag.artwork, path);
     } catch (e) {
       rethrow;
     }
@@ -69,9 +68,8 @@ class FlutterAudioTagger {
     try {
       Map<String, dynamic> artwork = {'artwork': imageData, 'filePath': path};
       final result = await platform.invokeMethod<String>("setArtWork", artwork);
-      print('SetArtwork result: $result');
+      
     } catch (e) {
-      print('Error in setArtWork: $e');
       rethrow;
     }
   }
