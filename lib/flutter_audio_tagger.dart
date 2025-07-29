@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -18,9 +19,8 @@ class FlutterAudioTagger {
 
       return result;
     } catch (e) {
-      //print(e);
+      rethrow;
     }
-    return null;
   }
 
   Future<Map<dynamic, dynamic>?> getTags(String path) async {
@@ -29,9 +29,8 @@ class FlutterAudioTagger {
       Map<dynamic, dynamic>? tags = result;
       return tags;
     } catch (e) {
-      //print(e);
+      rethrow;
     }
-    return null;
   }
 
   Future<Tag?> getAllTags(String path) async {
@@ -44,39 +43,36 @@ class FlutterAudioTagger {
       tag = Tag.fromMap(data);
       return tag;
     } catch (e) {
-      //print(e);
+      rethrow;
     }
-    return null;
   }
 
   Future<void> editTags(Tag tag, String path) async {
     try {
       Map<String, String?> tags = Tag.createMapWithPath(tag, path);
-       await platform.invokeMethod<String>('setTags', tags);
+      await platform.invokeMethod<String>('setTags', tags);
       Map<String, dynamic> artwork = Map();
       artwork['artwork'] = tag.artwork;
       artwork['filePath'] = path;
-      await platform.invokeMethod<String>(
-        "setArtWork",
-        artwork,
-      );
+      //await platform.invokeMethod<String>("setArtWork", artwork);
+      setArtWork(tag.artwork, path);
     } catch (e) {
-      //print(e);
+      rethrow;
     }
   }
 
-  Future<void> setArtWork(Uint8List imagepath, String path) async {
-    try {
-      Map<String, dynamic> artwork = Map();
-      artwork['artwork'] = imagepath;
-      artwork['filePath'] = path;
+  Future<void> setArtWork(Uint8List? imageData, String path) async {
+    if (imageData == null) {
+      return;
+    }
 
-      await platform.invokeMethod<String>(
-        "setArtWork",
-        artwork,
-      );
+    try {
+      Map<String, dynamic> artwork = {'artwork': imageData, 'filePath': path};
+      final result = await platform.invokeMethod<String>("setArtWork", artwork);
+      print('SetArtwork result: $result');
     } catch (e) {
-      //print(e);
+      print('Error in setArtWork: $e');
+      rethrow;
     }
   }
 }

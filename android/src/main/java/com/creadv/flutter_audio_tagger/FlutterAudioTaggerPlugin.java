@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+
 import android.util.Log;
 
 
@@ -22,8 +23,13 @@ import androidx.annotation.NonNull;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.KeyNotFoundException;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.asf.AsfTag;
+import org.jaudiotagger.tag.asf.AsfTagField;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.images.ArtworkFactory;
 import org.jaudiotagger.tag.reference.PictureTypes;
@@ -56,12 +62,23 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
             result.success("Android " + android.os.Build.VERSION.RELEASE);
         } else if (call.method.equals("getArtWork")) {
             try {
+
                 File music = new File((String) call.arguments);
 
                 AudioFile audioFile = AudioFileIO.read(music);
                 Tag tag = audioFile.getTag();
-                byte[] artwork = tag.getFirstArtwork().getBinaryData();
-                result.success(artwork);
+
+
+                Artwork artwork = tag.getFirstArtwork();
+                if (artwork == null) {
+                    result.success(null);
+                } else {
+                    byte[] image = artwork.getBinaryData();
+                    result.success(image);
+
+                }
+
+
             } catch (Exception e) {
                 result.error("ArtworkError", e.getMessage(), e.getCause());
                 System.out.println("error : " + e);
@@ -72,17 +89,18 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 File music = new File((String) call.arguments);
                 AudioFile audioFile = AudioFileIO.read(music);
                 Tag tag = audioFile.getTag();
+
                 Map<String, String> data = new HashMap<>();
-                data.put("artist", tag.getFirst(FieldKey.ARTIST));
-                data.put("title", tag.getFirst(FieldKey.TITLE));
-                data.put("album", tag.getFirst(FieldKey.ALBUM));
-                data.put("year", tag.getFirst(FieldKey.YEAR));
-                data.put("genre", tag.getFirst(FieldKey.GENRE));
-                data.put("language", tag.getFirst(FieldKey.LANGUAGE));
-                data.put("composer", tag.getFirst(FieldKey.COMPOSER));
-                data.put("country", tag.getFirst(FieldKey.COUNTRY));
-                data.put("lyrics", tag.getFirst(FieldKey.LYRICS));
-                data.put("quality", tag.getFirst(FieldKey.QUALITY));
+                data.put("artist", tag.getFirst(FieldKey.ARTIST).isEmpty() ? "" : tag.getFirst(FieldKey.ARTIST));
+                data.put("title", tag.getFirst(FieldKey.TITLE).isEmpty() ? "" : tag.getFirst(FieldKey.TITLE));
+                data.put("album", tag.getFirst(FieldKey.ALBUM).isEmpty() ? "" : tag.getFirst(FieldKey.ALBUM));
+                data.put("year", tag.getFirst(FieldKey.YEAR).isEmpty() ? "" : tag.getFirst(FieldKey.YEAR));
+                data.put("genre", tag.getFirst(FieldKey.GENRE).isEmpty() ? "" : tag.getFirst(FieldKey.GENRE));
+                data.put("language", tag.getFirst(FieldKey.LANGUAGE).isEmpty() ? "" : tag.getFirst(FieldKey.LANGUAGE));
+                data.put("composer", tag.getFirst(FieldKey.COMPOSER).isEmpty() ? "" : tag.getFirst(FieldKey.COMPOSER));
+                data.put("country", tag.getFirst(FieldKey.COUNTRY).isEmpty() ? "" : tag.getFirst(FieldKey.COUNTRY));
+                data.put("lyrics", tag.getFirst(FieldKey.LYRICS).isEmpty() ? "" : tag.getFirst(FieldKey.LYRICS));
+                data.put("quality", tag.getFirst(FieldKey.QUALITY).isEmpty() ? "" : tag.getFirst(FieldKey.QUALITY));
 
                 result.success(data);
             } catch (Exception e) {
@@ -93,6 +111,9 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
             }
         } else if (call.method.equals("setTags")) {
             try {
+
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
                 Map<String, Object> arguments = (Map<String, Object>) call.arguments;
                 String filePath = (String) arguments.get("filePath");
                 String artist = (String) arguments.get("artist");
@@ -109,71 +130,136 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 File originalFile = new File(filePath);
                 AudioFile audioFile = AudioFileIO.read(originalFile);
                 Tag tag = audioFile.getTag();
-                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                if(filePath == null){
-                  result.error("No specified path",  "please specify the music file path.", "");
-                  return;
+
+
+                if (filePath == null) {
+                    result.error("No specified path", "please specify the music file path.", "");
+                    return;
                 }
                 if (artist != null) {
-                    tag.deleteField(FieldKey.ARTIST);
-                    tag.setField(FieldKey.ARTIST, artist);
+                    try {
+                        tag.deleteField(FieldKey.ARTIST);
+                        tag.setField(FieldKey.ARTIST, artist);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
-                if (lyrics != null ) {
-                    tag.deleteField(FieldKey.LYRICS);
-                    tag.setField(FieldKey.LYRICS, lyrics);
+                if (lyrics != null) {
+                    try {
+                        tag.deleteField(FieldKey.LYRICS);
+                        tag.setField(FieldKey.LYRICS, lyrics);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (title != null) {
-                    tag.deleteField(FieldKey.TITLE);
-                    tag.setField(FieldKey.TITLE, title);
+                    try {
+                        tag.deleteField(FieldKey.TITLE);
+                        tag.setField(FieldKey.TITLE, title);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (album != null) {
-                    tag.deleteField(FieldKey.ALBUM);
-                    tag.setField(FieldKey.ALBUM, album);
+                    try {                        tag.deleteField(FieldKey.ALBUM);
+                        tag.setField(FieldKey.ALBUM, album);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (year != null) {
-                    tag.deleteField(FieldKey.YEAR);
-                    tag.setField(FieldKey.YEAR, year);
+                    try {
+                        tag.deleteField(FieldKey.YEAR);
+                        tag.setField(FieldKey.YEAR, year);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (genre != null) {
-                    tag.deleteField(FieldKey.GENRE);
-                    tag.setField(FieldKey.GENRE, genre);
+                    try {
+                        tag.deleteField(FieldKey.GENRE);
+                        tag.setField(FieldKey.GENRE, genre);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (language != null) {
-                    tag.deleteField(FieldKey.LANGUAGE);
-                    tag.setField(FieldKey.LANGUAGE, language);
+                    try {
+                        tag.deleteField(FieldKey.LANGUAGE);
+                        tag.setField(FieldKey.LANGUAGE, language);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (composer != null) {
-                    tag.deleteField(FieldKey.COMPOSER);
-                    tag.setField(FieldKey.COMPOSER, composer);
+                    try {
+                        tag.deleteField(FieldKey.COMPOSER);
+                        tag.setField(FieldKey.COMPOSER, composer);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (country != null) {
-                    tag.deleteField(FieldKey.COUNTRY);
-                    tag.setField(FieldKey.COUNTRY, country);
+                    try {
+                        tag.deleteField(FieldKey.COUNTRY);
+                        tag.setField(FieldKey.COUNTRY, country);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 if (quality != null) {
-                    tag.deleteField(FieldKey.QUALITY);
-                    tag.setField(FieldKey.QUALITY, quality);
+                    try {
+                        tag.deleteField(FieldKey.QUALITY);
+                        tag.setField(FieldKey.QUALITY, quality);
+                    } catch (KeyNotFoundException e) {
+                        // throw new RuntimeException(e);
+                    } catch (FieldDataInvalidException e) {
+                        // throw new RuntimeException(e);
+                    }
                 }
                 audioFile.setTag(tag);
                 AudioFileIO.write(audioFile);
-                File testFile2 = new File(downloadsDir, addEditedSuffix(filePath));
-                try {
-                    FileOutputStream fos = new FileOutputStream(testFile2);
+                File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
+                try (FileOutputStream fos = new FileOutputStream(musicfile)){
                     byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
                     fos.write(music_data);
-                    fos.close();
+                    fos.flush();
+
+
+
+
 
 
                 } catch (Exception e) {
+                    Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
                     result.error("SetTagsError", e.getMessage(), e.getCause());
+
                 }
-
-
+                Log.e("filesaved", "file saved: " + "file saved a zbi using tags");
                 result.success("File saved");
 
             } catch (Exception e) {
-                result.error("SetTagsError", e.getMessage(), e.getCause());
                 Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
+                result.error("SetTagsError", e.getMessage(), e.getCause());
+
             }
         } else if (call.method.equals("setArtWork")) {
             try {
@@ -187,26 +273,38 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                     File audioFile = new File(filePath);
                     AudioFile f = AudioFileIO.read(audioFile);
                     Tag tag = f.getTag();
+
                     Artwork artwork = ArtworkFactory.createArtworkFromFile(audioFile);
                     artwork.setBinaryData(artworkData);
                     artwork.setMimeType("image/jpeg");
                     artwork.setPictureType(PictureTypes.DEFAULT_ID);
-                    tag.deleteArtworkField();
-                    tag.setField(artwork);
-                    f.setTag(tag);
-                    AudioFileIO.write(f);
-                    File testFile2 = new File(downloadsDir, addEditedSuffix(filePath));
                     try {
-                        FileOutputStream fos = new FileOutputStream(testFile2);
+                        tag.deleteArtworkField();
+                        tag.setField(artwork);
+                        f.setTag(tag);
+                    } catch (KeyNotFoundException e) {
+                        //throw new RuntimeException(e);
+                    }
+                    AudioFileIO.write(f);
+                    File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
+                    try(FileOutputStream fos = new FileOutputStream(musicfile)) {
+
                         byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
                         fos.write(music_data);
-                        fos.close();
+                        fos.flush();
+
                     } catch (Exception e) {
                         result.error("SetArtworkError", e.getMessage(), e.getCause());
                     }
+                    Log.e("filesaved", "file saved: " + "file saved a zbi using artwork");
+                    result.success("File saved");
 
-                    result.success("Artwork set successfully");
+                }else{
+//                    result.error("SetArtworkError","no file specified", "");
+//                    Log.e("setartwork error", "no file specified " );
+                    return;
                 }
+
 
 
             } catch (Exception e) {

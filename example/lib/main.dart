@@ -105,44 +105,88 @@ class _MainPageState extends State<MainPage> {
         quality: _qualityController.text.isEmpty
             ? null
             : _qualityController.text,
-        lyrics:
-            _lyricsController
-                .text
-                .isEmpty // Add this line
-            ? null
-            : _lyricsController.text,
+        lyrics: _lyricsController.text.isEmpty ? null : _lyricsController.text,
         artwork: tag?.artwork,
       );
 
+      // Save the changes
       await flutterAudioTagger.editTags(updatedTag, currentFilePath!);
 
-      // Refresh tags
-      tag = await flutterAudioTagger.getAllTags(currentFilePath!);
-      _populateControllers();
-
+      // Force UI state update BEFORE refreshing tags
       setState(() {
         _isEditing = false;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Tags saved successfully!')));
+      // Refresh tags to show updated data
+      tag = await flutterAudioTagger.getAllTags(currentFilePath!);
+      _populateControllers();
+
+      // Update UI again after refreshing
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tags saved successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } on FileSystemException catch (e) {
+      setState(() {
+        _isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File error: ${e.message}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } on ArgumentError catch (e) {
+      setState(() {
+        _isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid input: ${e.message}'),
+          backgroundColor: Colors.orange,
+        ),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error saving tags: $e')));
+      setState(() {
+        _isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving tags: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   Future<void> _editArtwork() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-      type: FileType.image,
-    );
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        type: FileType.image,
+      );
 
-    if (result != null && currentFilePath != null) {
-      try {
+      if (result != null && currentFilePath != null) {
         File imageFile = File(result.files.single.path!);
+
+        // Check if image file exists
+        if (!await imageFile.exists()) {
+          throw FileSystemException('Selected image file does not exist');
+        }
+
+        // Check file size (limit to 10MB)
+        int fileSize = await imageFile.length();
+        if (fileSize > 10 * 1024 * 1024) {
+          throw Exception('Image file too large (max 10MB)');
+        }
+
         Uint8List imageData = await imageFile.readAsBytes();
 
         await flutterAudioTagger.setArtWork(imageData, currentFilePath!);
@@ -152,13 +196,26 @@ class _MainPageState extends State<MainPage> {
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Artwork updated successfully!')),
+          SnackBar(
+            content: Text('Artwork updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
         );
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error updating artwork: $e')));
       }
+    } on FileSystemException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('File error: ${e.message}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating artwork: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -191,13 +248,21 @@ class _MainPageState extends State<MainPage> {
                 Expanded(
                   child: TextButton(
                     onPressed: () async {
-                      FilePickerResult? result = await FilePicker.platform
-                          .pickFiles(
-                            allowMultiple: false,
-                            type: FileType.custom,
-                            allowedExtensions: ['mp3', 'm4a', 'mp4', 'wav'],
-                             /* supported formats : Mp3, Flac, OggVorbis, Mp4, Aiff, Wav, Wma, dsf */
-                          );
+                      FilePickerResult?
+                      result = await FilePicker.platform.pickFiles(
+                        allowMultiple: false,
+                        type: FileType.custom,
+                        allowedExtensions: [
+                          'mp3',
+                          'ogg',
+                          'flac',
+                          'aiff',
+                          'wav',
+                          'wma',
+                          'dsf',
+                        ],
+                        /* supported formats : Mp3, Flac, OggVorbis, Mp4, Aiff, Wav, Wma, dsf */
+                      );
 
                       if (result != null) {
                         currentFilePath = result.files.single.path!;

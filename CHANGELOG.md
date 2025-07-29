@@ -1,3 +1,3 @@
-## 1.1.1
+## 2.0.0
 
-* many audio formats are supported now, some improvements are coming soon inchaellah
+* so much improvements, i can't mention all of them, enjoy coding and using my plugin, and pray for my parents.

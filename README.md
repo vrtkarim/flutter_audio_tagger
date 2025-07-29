@@ -2,6 +2,15 @@
 
 A Flutter plugin for reading and editing audio file metadata (tags) with support for multiple audio formats.
 
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.creadv.audiotagger&hl=en">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80"/>
+  </a>
+  <a href="https://pub.dev/packages/flutter_audio_tagger">
+    <img src="https://img.shields.io/pub/v/flutter_audio_tagger.svg" alt="pub package" height="80"/>
+  </a>
+</p>
+
 ## Features
 
 - **Read metadata** from audio files
@@ -43,7 +52,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_audio_tagger: ^1.0.1
+  flutter_audio_tagger: ^1.1.2
 ```
 
 ## Usage
@@ -161,12 +170,12 @@ Tag updateExample = Tag(
 
 ## File Output
 
-When editing metadata, the plugin creates a new audio file with the same name plus an "_edited" suffix in the Downloads folder:
+When editing metadata, the plugin creates a new audio file in the device's Downloads folder (`/storage/emulated/0/Download/`) with the same name plus an "_edited" suffix:
 
 - Original: `/storage/music/song.mp3`
-- Edited: `/storage/Download/song_edited.mp3`
+- Edited: `/storage/emulated/0/Download/song_edited.mp3`
 
-This preserves your original files while providing the edited versions.
+This preserves your original files while providing the edited versions in an easily accessible location.
 
 ## Platform Support
 
@@ -177,7 +186,6 @@ This preserves your original files while providing the edited versions.
 | Web      | ❌ Not supported |
 | Desktop  | ❌ Not supported |
 
-## Requirements
 
 
 ## License
