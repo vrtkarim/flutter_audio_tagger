@@ -4,6 +4,7 @@ package com.creadv.flutter_audio_tagger;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -207,6 +208,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
 
                 }
                 Log.e("filesaved", "file saved: " + "file saved a zbi using tags");
+                MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
                 result.success("File saved");
 
             } catch (Exception e) {
@@ -249,6 +251,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                     } catch (Exception e) {
                         result.error("SetArtworkError", e.getMessage(), e.getCause());
                     }
+                    MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
                     Log.e("filesaved", "file saved: " + "file saved a zbi using artwork");
                     result.success("File saved");
 
