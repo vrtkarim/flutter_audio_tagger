@@ -14,6 +14,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -197,6 +198,13 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 audioFile.setTag(tag);
                 AudioFileIO.write(audioFile);
                 File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
+                if (musicfile.exists()) {
+                    try {
+                        Files.delete(Paths.get(musicfile.getPath()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 try (FileOutputStream fos = new FileOutputStream(musicfile)){
                     byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
                     fos.write(music_data);
@@ -242,6 +250,13 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                     }
                     AudioFileIO.write(f);
                     File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
+                    if (musicfile.exists()) {
+                        try {
+                            Files.delete(Paths.get(musicfile.getPath()));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                     try(FileOutputStream fos = new FileOutputStream(musicfile)) {
 
                         byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
