@@ -299,12 +299,12 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
         int lastDotIndex = fileName.lastIndexOf('.');
 
         if (lastDotIndex == -1) {
-            return fileName + "_edited";
+            return fileName + System.currentTimeMillis();
         } else {
 
             String nameWithoutExtension = fileName.substring(0, lastDotIndex);
             String extension = fileName.substring(lastDotIndex);
-            return nameWithoutExtension + "_edited" + extension;
+            return nameWithoutExtension + System.currentTimeMillis() + extension;
         }
     }
 
