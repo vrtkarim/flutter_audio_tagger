@@ -1,3 +1,3 @@
-## 4.0.1
+## 4.0.2
 
-* so much improvements, i can't mention all of them, enjoy coding using my plugin, and pray for my parents.
+* file are not saved using the plugin, the plugin returns the bytes of the edited file, and the saving should be handled in the application. Thanks.

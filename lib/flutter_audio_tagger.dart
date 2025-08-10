@@ -1,5 +1,5 @@
-
 import 'package:flutter/services.dart';
+import 'package:flutter_audio_tagger/audiofiledata.dart';
 import 'package:flutter_audio_tagger/tag.dart';
 import 'flutter_audio_tagger_platform_interface.dart';
 
@@ -46,31 +46,46 @@ class FlutterAudioTagger {
     }
   }
 
-  Future<void> editTags(Tag tag, String path) async {
+  Future<AudioFileData> editTags(Tag tag, String path) async {
     // this method is used to edit tags of the song
 
     try {
+      // this doesnt contain the artwork and it wont edit it
       Map<String, String?> tags = Tag.createMapWithPath(tag, path);
-      await platform.invokeMethod<String>('setTags', tags);
-      Map<String, dynamic> artwork = Map();
+      final result = await platform.invokeMapMethod<String, dynamic>(
+        'setTags',
+        tags,
+      );
+      if (result == null) {
+        throw StateError('No result from setArtWork');
+      }
+      final bytes = result['musicData'] as Uint8List;
+      final ext = result['extension'] as String?;
+      return AudioFileData(musicData: bytes, filExtension: ext??'');
+
+      /* Map<String, dynamic> artwork = Map();
       artwork['artwork'] = tag.artwork;
       artwork['filePath'] = path;
       //await platform.invokeMethod<String>("setArtWork", artwork);
-      await setArtWork(tag.artwork, path);
+      await setArtWork(tag.artwork, path); */
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> setArtWork(Uint8List? imageData, String path) async {
+  Future<AudioFileData> setArtWork(Uint8List? imageData, String path) async {
     //this method is used to edit the image cover of the song, make sure that the imageData is not null
-    if (imageData == null) {
-      return;
-    }
-
+    
     try {
       Map<String, dynamic> artwork = {'artwork': imageData, 'filePath': path};
-      await platform.invokeMethod<String>("setArtWork", artwork);
+      final result = await platform.invokeMapMethod<String, dynamic>("setArtWork", artwork);
+      if (result == null) {
+        throw StateError('No result from setArtWork');
+      }
+      final bytes = result['musicData'] as Uint8List;
+      final ext = result['extension'] as String?;
+      return AudioFileData(musicData: bytes, filExtension: ext??'');
+
     } catch (e) {
       rethrow;
     }

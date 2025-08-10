@@ -112,7 +112,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
         } else if (call.method.equals("setTags")) {
             try {
 
-                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
                 Map<String, Object> arguments = (Map<String, Object>) call.arguments;
                 String filePath = (String) arguments.get("filePath");
@@ -197,27 +197,26 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 }
                 audioFile.setTag(tag);
                 AudioFileIO.write(audioFile);
-                File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
-                if (musicfile.exists()) {
-                    try {
-                        Files.delete(Paths.get(musicfile.getPath()));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                try (FileOutputStream fos = new FileOutputStream(musicfile)){
-                    byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
-                    fos.write(music_data);
-                    fos.flush();
-
-                } catch (Exception e) {
-                    Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
-                    result.error("SetTagsError", e.getMessage(), e.getCause());
-
-                }
-                Log.e("filesaved", "file saved: " + "file saved a zbi using tags");
-                MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
-                result.success("File saved");
+//                File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
+//
+//                try (FileOutputStream fos = new FileOutputStream(musicfile)){
+//                    byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
+//                    fos.write(music_data);
+//                    fos.flush();
+//
+//                } catch (Exception e) {
+//                    Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
+//                    result.error("SetTagsError", e.getMessage(), e.getCause());
+//
+//                }
+//                Log.e("filesaved", "file saved: " + "file saved a zbi using tags");
+//                MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
+                byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
+                String extensionOfTheFile = getExtensionUsingString(audioFile.getFile().getPath());
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("musicData", music_data);
+                payload.put("extension", extensionOfTheFile);
+                result.success(payload);
 
             } catch (Exception e) {
                 Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
@@ -232,7 +231,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 byte[] artworkData = (byte[]) arguments.get("artwork");
                 // process
                 if (filePath != null && artworkData != null) {
-                    File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                     File audioFile = new File(filePath);
                     AudioFile f = AudioFileIO.read(audioFile);
                     Tag tag = f.getTagOrCreateDefault();
@@ -249,26 +248,23 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                         //throw new RuntimeException(e);
                     }
                     AudioFileIO.write(f);
-                    File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
-                    if (musicfile.exists()) {
-                        try {
-                            Files.delete(Paths.get(musicfile.getPath()));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    try(FileOutputStream fos = new FileOutputStream(musicfile)) {
-
-                        byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
-                        fos.write(music_data);
-                        fos.flush();
-
-                    } catch (Exception e) {
-                        result.error("SetArtworkError", e.getMessage(), e.getCause());
-                    }
-                    MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
-                    Log.e("filesaved", "file saved: " + "file saved a zbi using artwork");
-                    result.success("File saved");
+//                    File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
+//                    try(FileOutputStream fos = new FileOutputStream(musicfile)) {
+//
+//                        byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
+//                        fos.write(music_data);
+//                        fos.flush();
+//
+//                    } catch (Exception e) {
+//                        result.error("SetArtworkError", e.getMessage(), e.getCause());
+//                    }
+//                    MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
+                    byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
+                    String extensionOfTheFile = getExtensionUsingString(f.getFile().getPath());
+                    Map<String, Object> payload = new HashMap<>();
+                    payload.put("musicData", music_data);
+                    payload.put("extension", extensionOfTheFile);
+                    result.success(payload);
 
                 }else{
 //                    result.error("SetArtworkError","no file specified", "");
@@ -306,6 +302,20 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
             String extension = fileName.substring(lastDotIndex);
             return nameWithoutExtension + System.currentTimeMillis() + extension;
         }
+    }
+    String getExtensionUsingString(String filePath) {
+        if (filePath == null || filePath.isEmpty()) {
+            return "";
+        }
+
+        // Get just the filename from the path
+        String fileName = new File(filePath).getName();
+
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
+            return fileName.substring(lastDotIndex + 1).toLowerCase();
+        }
+        return ""; // No extension found
     }
 
 
