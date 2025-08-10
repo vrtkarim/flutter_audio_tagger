@@ -10,7 +10,7 @@ A Flutter plugin for reading and editing audio file metadata (tags) with support
 
 <p align="center">
   <a href="https://pub.dev/packages/flutter_audio_tagger">
-    <img src="https://img.shields.io/pub/v/flutter_audio_tagger.svg" alt="pub package" height="75"/>
+    <img src="https://img.shields.io/pub/v/flutter_audio_tagger.svg" alt="pub package" height="95"/>
   </a>
 </p>
 
