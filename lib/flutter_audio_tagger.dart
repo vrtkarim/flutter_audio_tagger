@@ -46,6 +46,21 @@ class FlutterAudioTagger {
     }
   }
 
+  Future<AudioFileData> editTagsAndArtwork(Tag tag, String path) async {
+    Map<String, dynamic> tags = Tag.createMapWithPath(tag, path);
+    tags['artwork'] = tag.artwork;
+    final result = await platform.invokeMapMethod<String, dynamic>(
+        'setTagsAndArtwork',
+        tags,
+      );
+    if (result == null) {
+        throw StateError('No result from setArtWork');
+      }
+      final bytes = result['musicData'] as Uint8List;
+      final ext = result['extension'] as String?;
+      return AudioFileData(musicData: bytes, fileExtension: ext ?? '');
+  }
+
   Future<AudioFileData> editTags(Tag tag, String path) async {
     // this method is used to edit tags of the song
 
@@ -61,7 +76,7 @@ class FlutterAudioTagger {
       }
       final bytes = result['musicData'] as Uint8List;
       final ext = result['extension'] as String?;
-      return AudioFileData(musicData: bytes, filExtension: ext??'');
+      return AudioFileData(musicData: bytes, fileExtension: ext ?? '');
 
       /* Map<String, dynamic> artwork = Map();
       artwork['artwork'] = tag.artwork;
@@ -75,17 +90,19 @@ class FlutterAudioTagger {
 
   Future<AudioFileData> setArtWork(Uint8List? imageData, String path) async {
     //this method is used to edit the image cover of the song, make sure that the imageData is not null
-    
+
     try {
       Map<String, dynamic> artwork = {'artwork': imageData, 'filePath': path};
-      final result = await platform.invokeMapMethod<String, dynamic>("setArtWork", artwork);
+      final result = await platform.invokeMapMethod<String, dynamic>(
+        "setArtWork",
+        artwork,
+      );
       if (result == null) {
         throw StateError('No result from setArtWork');
       }
       final bytes = result['musicData'] as Uint8List;
       final ext = result['extension'] as String?;
-      return AudioFileData(musicData: bytes, filExtension: ext??'');
-
+      return AudioFileData(musicData: bytes, fileExtension: ext ?? '');
     } catch (e) {
       rethrow;
     }

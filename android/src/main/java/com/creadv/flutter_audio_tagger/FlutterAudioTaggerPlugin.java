@@ -278,7 +278,122 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 result.error("SetArtworkError", e.getMessage(), e.getCause());
                 Log.e("FlutterAudioTagger", "SetArtwork error: " + e.getMessage());
             }
-        } else {
+        }else if(call.method.equals("setTagsAndArtwork")){
+            try {
+
+                //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+
+                Map<String, Object> arguments = (Map<String, Object>) call.arguments;
+                String filePath = (String) arguments.get("filePath");
+                String artist = (String) arguments.get("artist");
+                String title = (String) arguments.get("title");
+                String album = (String) arguments.get("album");
+                String year = (String) arguments.get("year");
+                String genre = (String) arguments.get("genre");
+                String language = (String) arguments.get("language");
+                String composer = (String) arguments.get("composer");
+                String country = (String) arguments.get("country");
+                String quality = (String) arguments.get("quality");
+                String lyrics = (String) arguments.get("lyrics");
+                byte[] artwork = (byte[]) arguments.get("artwork");
+
+                File originalFile = new File(filePath);
+                AudioFile audioFile = AudioFileIO.read(originalFile);
+                Tag tag = audioFile.getTagOrCreateDefault();
+
+
+                if (filePath == null) {
+                    result.error("No specified path", "please specify the music file path.", "");
+                    return;
+                }
+                if (artist != null) {
+
+                        tag.deleteField(FieldKey.ARTIST);
+                        tag.setField(FieldKey.ARTIST, artist);
+                   
+                }
+                if (lyrics != null) {
+
+                        tag.deleteField(FieldKey.LYRICS);
+                        tag.setField(FieldKey.LYRICS, lyrics);
+                   
+                }
+                if (title != null) {
+
+                        tag.deleteField(FieldKey.TITLE);
+                        tag.setField(FieldKey.TITLE, title);
+                   
+                }
+                if (album != null) {
+                                           tag.deleteField(FieldKey.ALBUM);
+                        tag.setField(FieldKey.ALBUM, album);
+                   
+                }
+                if (year != null) {
+
+                        tag.deleteField(FieldKey.YEAR);
+                        tag.setField(FieldKey.YEAR, year);
+                   
+                }
+                if (genre != null) {
+
+                        tag.deleteField(FieldKey.GENRE);
+                        tag.setField(FieldKey.GENRE, genre);
+                   
+                }
+                if (language != null) {
+                   
+                        tag.deleteField(FieldKey.LANGUAGE);
+                        tag.setField(FieldKey.LANGUAGE, language);
+                   
+                }
+                if (composer != null) {
+
+                        tag.deleteField(FieldKey.COMPOSER);
+                        tag.setField(FieldKey.COMPOSER, composer);
+                   
+                }
+                if (country != null) {
+
+                        tag.deleteField(FieldKey.COUNTRY);
+                        tag.setField(FieldKey.COUNTRY, country);
+                   
+                }
+                if (quality != null) {
+
+                        tag.deleteField(FieldKey.QUALITY);
+                        tag.setField(FieldKey.QUALITY, quality);
+                   
+                }
+                Artwork artwork = new AndroidArtwork();
+                    artwork.setBinaryData(artwork);
+                    artwork.setMimeType("image/jpeg");
+                    artwork.setPictureType(PictureTypes.DEFAULT_ID);
+                    try {
+                        tag.deleteArtworkField();
+                        tag.setField(artwork);
+                       
+                    } catch (KeyNotFoundException e) {
+                        //throw new RuntimeException(e);
+                    }
+                audioFile.setTag(tag);
+                AudioFileIO.write(audioFile);
+//              
+                byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
+                String extensionOfTheFile = getExtensionUsingString(audioFile.getFile().getPath());
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("musicData", music_data);
+                payload.put("extension", extensionOfTheFile);
+                result.success(payload);
+
+            } catch (Exception e) {
+                Log.e("FlutterAudioTagger", "SetTagsWithArtwork error: " + e.getMessage());
+                result.error("SetTagsWithArtworkError", e.getMessage(), e.getCause());
+
+            }
+
+        }
+         else {
             result.notImplemented();
         }
     }
