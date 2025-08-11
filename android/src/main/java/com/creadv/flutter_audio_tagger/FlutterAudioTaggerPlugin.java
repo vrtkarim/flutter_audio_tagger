@@ -295,7 +295,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 String country = (String) arguments.get("country");
                 String quality = (String) arguments.get("quality");
                 String lyrics = (String) arguments.get("lyrics");
-                byte[] artwork = (byte[]) arguments.get("artwork");
+                byte[] artworkdata = (byte[]) arguments.get("artwork");
 
                 File originalFile = new File(filePath);
                 AudioFile audioFile = AudioFileIO.read(originalFile);
@@ -366,7 +366,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                    
                 }
                 Artwork artwork = new AndroidArtwork();
-                    artwork.setBinaryData(artwork);
+                    artwork.setBinaryData(artworkdata);
                     artwork.setMimeType("image/jpeg");
                     artwork.setPictureType(PictureTypes.DEFAULT_ID);
                     try {
