@@ -66,7 +66,7 @@ class FlutterAudioTagger {
 
     try {
       // this doesnt contain the artwork and it wont edit it
-      Map<String, String?> tags = Tag.createMapWithPath(tag, path);
+      Map<String, dynamic> tags = Tag.createMapWithPath(tag, path);
       final result = await platform.invokeMapMethod<String, dynamic>(
         'setTags',
         tags,
