@@ -92,6 +92,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
 
                 Tag tag = audioFile.getTagOrCreateDefault();
                 Map<String, Object> data = new HashMap<>();
+               
                 data.put("artist", tag.getFirst(FieldKey.ARTIST).isEmpty() ? "" : tag.getFirst(FieldKey.ARTIST));
                 data.put("title", tag.getFirst(FieldKey.TITLE).isEmpty() ? "" : tag.getFirst(FieldKey.TITLE));
                 data.put("album", tag.getFirst(FieldKey.ALBUM).isEmpty() ? "" : tag.getFirst(FieldKey.ALBUM));
@@ -237,7 +238,7 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                     File audioFile = new File(filePath);
                     AudioFile f = AudioFileIO.read(audioFile);
                     Tag tag = f.getTagOrCreateDefault();
-
+                    
                     Artwork artwork = new AndroidArtwork();
                     artwork.setBinaryData(artworkData);
                     artwork.setMimeType("image/jpeg");

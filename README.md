@@ -1,12 +1,6 @@
 # flutter_audio_tagger
 
-A Flutter plugin for reading and editing audio file metadata (tags) with support for multiple audio formats.
-
-<p align="center">
-  <a href="https://play.google.com/store/apps/details?id=com.creadv.audiotagger&hl=en">
-    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="95"/>
-  </a>
-</p>
+A Flutter plugin for reading and editing audio file metadata (ID3 tags) on Android. The plugin reads tag data from audio files and returns edited files as raw bytes (`Uint8List`), giving your app full control over where and how the resulting file is saved.
 
 <p align="center">
   <a href="https://pub.dev/packages/flutter_audio_tagger">
@@ -14,246 +8,205 @@ A Flutter plugin for reading and editing audio file metadata (tags) with support
   </a>
 </p>
 
+## Platform Support
+
+| Platform | Supported |
+| -------- | --------- |
+| Android  | Yes       |
+| iOS      | No        |
+| Web      | No        |
+| Desktop  | No        |
+
 ## Features
 
-- **Read metadata** from audio files
-- **Edit metadata** fields including artwork
-- **Support for multiple audio formats**
-- **Easy to use** with a simple Tag data model
+- Read all metadata tags from an audio file, including artwork
+- Read metadata tags only (without artwork)
+- Read artwork only
+- Edit metadata tags (without touching artwork)
+- Edit artwork only
+- Edit metadata tags and artwork together in a single call
+- Returns the complete modified audio file as bytes (`Uint8List`) along with the file extension, so your app decides where to write it
 
 ## Supported Audio Formats
 
-- **MP3** (.mp3)
-- **MP4 Audio** (.mp4, .m4a, .m4p)
-- **Ogg Vorbis** (.ogg)
-- **FLAC** (.flac)
-- **WAV** (.wav)
-- **AIF** (.aif)
-- **DSF** (.dsf)
-- **WMA** (.wma)
-
+MP3, MP4/M4A/M4P, OGG Vorbis, FLAC, WAV, AIF, DSF, WMA.
 
 ## Supported Metadata Fields
 
-The plugin currently supports editing the following metadata fields:
-
-- **Artist** - The artist name
-- **Title** - The song title
-- **Album** - The album name
-- **Year** - Release year
-- **Genre** - Music genre
-- **Language** - Language of the track
-- **Composer** - Composer name
-- **Country** - Country of origin
-- **Quality** - Audio quality information
-- **Lyrics** - Song lyrics
-- **Artwork** - Album cover image
+| Field      | Description              |
+| ---------- | ------------------------ |
+| `artist`   | Artist name              |
+| `title`    | Track title              |
+| `album`    | Album name               |
+| `year`     | Release year             |
+| `genre`    | Music genre              |
+| `language` | Language of the track    |
+| `composer` | Composer name            |
+| `country`  | Country of origin        |
+| `quality`  | Audio quality descriptor |
+| `lyrics`   | Song lyrics              |
+| `artwork`  | Album cover image bytes  |
 
 ## Installation
 
-Add this to your package's `pubspec.yaml` file:
+Add the dependency to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_audio_tagger: ^1.1.2
+  flutter_audio_tagger: ^5.1.1
 ```
 
 ## Android Configuration
 
-Add the following to your `android/app/build.gradle` file in the `buildTypes` section:
+In your `android/app/build.gradle`, disable minification and resource shrinking for the release build:
 
 ```gradle
 buildTypes {
     release {
-        // TODO: Add your own signing config for the release build.
-
         minifyEnabled false
         shrinkResources false
     }
 }
 ```
 
-## Usage
-
-### Basic Example
+## API Overview
 
 ```dart
 import 'package:flutter_audio_tagger/flutter_audio_tagger.dart';
 import 'package:flutter_audio_tagger/tag.dart';
 import 'package:flutter_audio_tagger/audiofiledata.dart';
 
-final FlutterAudioTagger tagger = FlutterAudioTagger();
-
-// Read all metadata from an audio file
-Tag? tag = await tagger.getAllTags('/path/to/audio/file.mp3');
-print('Artist: ${tag?.artist}');
-print('Title: ${tag?.title}');
-
-// Edit metadata - Always use the Tag data type
-Tag updatedTag = Tag(
-  artist: 'New Artist Name',
-  title: 'New Song Title',
-  album: 'New Album',
-  year: '2024',
-  genre: 'Rock',
-  language: null,        // Set to null if you don't want to change
-  composer: '',          // Set to empty string to clear the field
-  country: tag?.country, // Keep existing value
-  quality: tag?.quality, // Keep existing value
-  lyrics: 'New lyrics here...',
-  artwork: tag?.artwork, // Keep existing artwork
-);
-
-// Edit tags only - Returns AudioFileData with musicData and fileExtension
-AudioFileData result = await tagger.editTags(updatedTag, '/path/to/audio/file.mp3');
-print('File extension: ${result.fileExtension}');
-print('Music data size: ${result.musicData.length} bytes');
+final tagger = FlutterAudioTagger();
 ```
 
-### Return Types
+### Reading
 
-All editing methods return `AudioFileData` which contains:
-- `musicData` (Uint8List): The processed audio file as bytes
-- `fileExtension` (String): The file extension (mp3, flac, etc.)
+| Method                    | Returns              | Description                           |
+| ------------------------- | -------------------- | ------------------------------------- |
+| `getAllTags(String path)` | `Future<Tag?>`       | All metadata fields including artwork |
+| `getTags(String path)`    | `Future<Map?>`       | Metadata fields only (no artwork)     |
+| `getArtWork(String path)` | `Future<Uint8List?>` | Artwork bytes only                    |
 
-**Editing Methods:**
-```dart
-// Edit tags only (without artwork) - Returns AudioFileData
-Future<AudioFileData> editTags(Tag tag, String path)
+### Editing
 
-// Set artwork only - Returns AudioFileData  
-Future<AudioFileData> setArtWork(Uint8List? imageData, String path)
+All editing methods return `Future<AudioFileData>`. The `AudioFileData` object contains:
 
-// Edit both tags and artwork - Returns AudioFileData
-Future<AudioFileData> editTagsAndArtwork(Tag tag, String path)
-```
+- `musicData` (`Uint8List`) -- the full modified audio file as bytes
+- `fileExtension` (`String`) -- the original file extension (e.g. `mp3`, `flac`)
 
-### Important Usage Notes
+| Method                                          | Description                     |
+| ----------------------------------------------- | ------------------------------- |
+| `editTags(Tag tag, String path)`                | Edit metadata only (no artwork) |
+| `setArtWork(Uint8List? imageData, String path)` | Edit artwork only               |
+| `editTagsAndArtwork(Tag tag, String path)`      | Edit both metadata and artwork  |
 
-**Always use the `Tag` data type when editing metadata, even if you only want to edit one field.**
-- Set a field to `null` to leave it unchanged
-- Set to empty string `""` to clear the field
+## Usage
 
-```dart
-// Use Tag object even for single field
-Tag updatedTag = Tag(
-  artist: 'New Artist',
-  title: null,           // Don't change title
-  album: null,           // Don't change album
-  year: null,            // Don't change year
-  genre: null,           // Don't change genre
-  language: null,        // Don't change language
-  composer: null,        // Don't change composer
-  country: null,         // Don't change country
-  quality: null,         // Don't change quality
-  lyrics: null,          // Don't change lyrics
-  artwork: existingTag?.artwork, // Keep existing artwork
-);
-```
-
-### Reading Specific Data
+### Reading metadata
 
 ```dart
-// Get only metadata tags (without artwork)
+// Read all tags including artwork
+Tag? tag = await tagger.getAllTags('/path/to/file.mp3');
+print(tag?.artist);
+print(tag?.title);
+
+// Read tags without artwork
 Map<dynamic, dynamic>? tags = await tagger.getTags('/path/to/file.mp3');
 
-// Get only artwork
+// Read artwork only
 Uint8List? artwork = await tagger.getArtWork('/path/to/file.mp3');
-
-// Get complete tag information
-Tag? completeTag = await tagger.getAllTags('/path/to/file.mp3');
 ```
 
-### Editing Artwork
+### Editing metadata
+
+Always pass a `Tag` object, even when updating a single field.
+
+- Set a field to `null` to leave it unchanged.
+- Set a field to an empty string `""` to clear it.
+- Set a field to a value to update it.
+
+```dart
+Tag updatedTag = Tag(
+  artist: 'New Artist',
+  title: 'New Title',
+  album: null,           // unchanged
+  year: '2025',
+  genre: '',             // cleared
+  language: null,
+  composer: null,
+  country: null,
+  quality: null,
+  lyrics: 'New lyrics',
+  artwork: null,         // not used by editTags; pass artwork to editTagsAndArtwork
+);
+
+AudioFileData result = await tagger.editTags(updatedTag, '/path/to/file.mp3');
+```
+
+### Editing artwork
 
 ```dart
 import 'dart:io';
 
-// Load new artwork
-File imageFile = File('/path/to/new/artwork.jpg');
+File imageFile = File('/path/to/cover.jpg');
 Uint8List imageData = await imageFile.readAsBytes();
 
-// Method 1: Set artwork only - Returns AudioFileData
-AudioFileData artworkResult = await tagger.setArtWork(imageData, '/path/to/file.mp3');
-
-// Method 2: Create tag with new artwork and edit everything
-Tag tagWithNewArtwork = Tag(
-  artist: existingTag?.artist,
-  title: existingTag?.title,
-  album: existingTag?.album,
-  year: existingTag?.year,
-  genre: existingTag?.genre,
-  language: existingTag?.language,
-  composer: existingTag?.composer,
-  country: existingTag?.country,
-  quality: existingTag?.quality,
-  lyrics: existingTag?.lyrics,
-  artwork: imageData, // New artwork
-);
-
-// Returns AudioFileData with both tags and artwork changes
-AudioFileData result = await tagger.editTagsAndArtwork(tagWithNewArtwork, '/path/to/file.mp3');
+// Set artwork only
+AudioFileData result = await tagger.setArtWork(imageData, '/path/to/file.mp3');
 ```
 
-### Working with AudioFileData
+### Editing tags and artwork together
 
 ```dart
-// Save the edited file to device storage
-AudioFileData editedFile = await tagger.editTags(updatedTag, originalPath);
+Tag tagWithArtwork = Tag(
+  artist: 'Artist',
+  title: 'Title',
+  album: 'Album',
+  year: '2025',
+  genre: 'Pop',
+  language: null,
+  composer: null,
+  country: null,
+  quality: null,
+  lyrics: null,
+  artwork: imageData,
+);
 
-// Save to Downloads folder
-File downloadsDir = Directory('/storage/emulated/0/Download');
-String fileName = 'edited_song.${editedFile.fileExtension}';
-File newFile = File('${downloadsDir.path}/$fileName');
-await newFile.writeAsBytes(editedFile.musicData);
-
-print('Saved to: ${newFile.path}');
+AudioFileData result = await tagger.editTagsAndArtwork(tagWithArtwork, '/path/to/file.mp3');
 ```
 
-### Field Management
+## Saving the edited file
 
-- **Set to `null`** - Field won't be changed
-- **Set to empty string `""`** - Field will be cleared
-- **Set to a value** - Field will be updated with the new value
+Every editing method returns an `AudioFileData` object. The plugin does **not** write the file to disk. Your app receives the raw bytes and is responsible for saving them. Use `dart:io` to write the bytes to any path your app has access to.
 
 ```dart
-Tag updateExample = Tag(
-  artist: 'Update this field',
-  title: null,              // Keep existing title
-  album: '',                // Clear the album field
-  year: '2024',             // Update year
-  // ... other fields
-);
+import 'dart:io';
+
+// Edit tags
+AudioFileData editedFile = await tagger.editTags(updatedTag, originalFilePath);
+
+// Write the bytes to a file
+String savePath = '/storage/emulated/0/Download/edited.${editedFile.fileExtension}';
+File outputFile = File(savePath);
+await outputFile.writeAsBytes(editedFile.musicData);
 ```
 
-## File Output
+You can save to any writable location: the app's documents directory, the downloads folder, an external storage path, or overwrite the original file. The `fileExtension` field tells you the format of the audio data so you can construct the correct filename.
 
-When editing metadata, the plugin returns `AudioFileData` containing the processed audio file as bytes. You can save this data to any location:
+```dart
+import 'package:path_provider/path_provider.dart';
 
-- **AudioFileData.musicData**: The complete audio file as Uint8List
-- **AudioFileData.fileExtension**: Original file extension (mp3, flac, ogg, etc.)
+// Save to app documents directory
+Directory appDir = await getApplicationDocumentsDirectory();
+String fileName = 'my_song.${editedFile.fileExtension}';
+File file = File('${appDir.path}/$fileName');
+await file.writeAsBytes(editedFile.musicData);
 
-Example output locations:
-- Downloads: `/storage/emulated/0/Download/song_edited.mp3`
-- Custom path: `/storage/music/edited/new_song.mp3`
-
-This gives you full control over where and how to save the edited files.
-
-## Platform Support
-
-| Platform | Support |
-|----------|---------|
-| Android  | ✅ Full support |
-| iOS      | ❌ Not supported |
-| Web      | ❌ Not supported |
-| Desktop  | ❌ Not supported |
-
-
-
-
+// Or overwrite the original file
+File original = File(originalFilePath);
+await original.writeAsBytes(editedFile.musicData);
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
+MIT License. See the [LICENSE](LICENSE) file for details.
