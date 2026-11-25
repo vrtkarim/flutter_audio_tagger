@@ -1,4 +1,4 @@
-## Unreleased
+## 6.0.0
 
 * Tag edits are now non-destructive: changes are applied to a temporary copy and returned as bytes, so the original audio file is no longer modified.
 * `editTagsAndArtwork` no longer fails when `Tag.artwork` is `null`.
