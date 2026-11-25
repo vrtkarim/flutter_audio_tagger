@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -112,9 +113,8 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
 
             }
         } else if (call.method.equals("setTags")) {
+            File workingCopy = null;
             try {
-
-                //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
                 Map<String, Object> arguments = (Map<String, Object>) call.arguments;
                 String filePath = (String) arguments.get("filePath");
@@ -129,16 +129,14 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 String quality = (String) arguments.get("quality");
                 String lyrics = (String) arguments.get("lyrics");
 
-                File originalFile = new File(filePath);
-                AudioFile audioFile = AudioFileIO.read(originalFile);
-
-                Tag tag = audioFile.getTagOrCreateDefault();
-
-
-                if (filePath == null) {
-                    result.error("No specified path", "please specify the music file path.", "");
+                if (filePath == null || filePath.isEmpty()) {
+                    result.error("No specified path", "please specify the music file path.", null);
                     return;
                 }
+
+                File originalFile = new File(filePath);
+                AudioFile audioFile = AudioFileIO.read(originalFile);
+                Tag tag = audioFile.getTagOrCreateDefault();
                 if (artist != null) {
 
                         tag.deleteField(FieldKey.ARTIST);
@@ -199,92 +197,73 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                    
                 }
                 audioFile.setTag(tag);
+
+                // Write to a temporary copy so the user's original file is never modified.
+                // The edited bytes are returned to the app, which decides where to save them.
+                workingCopy = createWorkingCopy(originalFile);
+                audioFile.setFile(workingCopy);
                 AudioFileIO.write(audioFile);
-//                File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
-//
-//                try (FileOutputStream fos = new FileOutputStream(musicfile)){
-//                    byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
-//                    fos.write(music_data);
-//                    fos.flush();
-//
-//                } catch (Exception e) {
-//                    Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
-//                    result.error("SetTagsError", e.getMessage(), e.getCause());
-//
-//                }
-//                Log.e("filesaved", "file saved: " + "file saved a zbi using tags");
-//                MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
-                byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
-                String extensionOfTheFile = getExtensionUsingString(audioFile.getFile().getPath());
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("musicData", music_data);
-                payload.put("extension", extensionOfTheFile);
-                result.success(payload);
+
+                result.success(buildEditedFilePayload(
+                        workingCopy, getExtensionUsingString(originalFile.getPath())));
 
             } catch (Exception e) {
                 Log.e("FlutterAudioTagger", "SetTags error: " + e.getMessage());
                 result.error("SetTagsError", e.getMessage(), e.getCause());
 
+            } finally {
+                deleteWorkingCopy(workingCopy);
             }
         } else if (call.method.equals("setArtWork")) {
+            File workingCopy = null;
             try {
                 Map<String, Object> arguments = (Map<String, Object>) call.arguments;
                 // data
                 String filePath = (String) arguments.get("filePath");
                 byte[] artworkData = (byte[]) arguments.get("artwork");
-                // process
-                if (filePath != null && artworkData != null) {
-                    //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                    File audioFile = new File(filePath);
-                    AudioFile f = AudioFileIO.read(audioFile);
-                    Tag tag = f.getTagOrCreateDefault();
-                    
-                    Artwork artwork = new AndroidArtwork();
-                    artwork.setBinaryData(artworkData);
-                    artwork.setMimeType("image/jpeg");
-                    artwork.setPictureType(PictureTypes.DEFAULT_ID);
-                    try {
-                        tag.deleteArtworkField();
-                        tag.setField(artwork);
-                        f.setTag(tag);
-                    } catch (KeyNotFoundException e) {
-                        //throw new RuntimeException(e);
-                    }
-                    AudioFileIO.write(f);
-//                    File musicfile = new File(downloadsDir, addEditedSuffix(filePath));
-//                    try(FileOutputStream fos = new FileOutputStream(musicfile)) {
-//
-//                        byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
-//                        fos.write(music_data);
-//                        fos.flush();
-//
-//                    } catch (Exception e) {
-//                        result.error("SetArtworkError", e.getMessage(), e.getCause());
-//                    }
-//                    MediaScannerConnection.scanFile(context, new String[]{musicfile.getPath()}, null, null);
-                    byte[] music_data = Files.readAllBytes(Paths.get(f.getFile().getPath()));
-                    String extensionOfTheFile = getExtensionUsingString(f.getFile().getPath());
-                    Map<String, Object> payload = new HashMap<>();
-                    payload.put("musicData", music_data);
-                    payload.put("extension", extensionOfTheFile);
-                    result.success(payload);
 
-                }else{
-//                    result.error("SetArtworkError","no file specified", "");
-//                    Log.e("setartwork error", "no file specified " );
+                if (filePath == null || filePath.isEmpty()) {
+                    result.error("No specified path", "please specify the music file path.", null);
+                    return;
+                }
+                if (artworkData == null) {
+                    result.error("SetArtworkError", "artwork data must not be null", null);
                     return;
                 }
 
+                File originalFile = new File(filePath);
+                AudioFile f = AudioFileIO.read(originalFile);
+                Tag tag = f.getTagOrCreateDefault();
 
+                Artwork artwork = new AndroidArtwork();
+                artwork.setBinaryData(artworkData);
+                artwork.setMimeType(getArtworkMimeType(artworkData));
+                artwork.setPictureType(PictureTypes.DEFAULT_ID);
+                try {
+                    tag.deleteArtworkField();
+                    tag.setField(artwork);
+                    f.setTag(tag);
+                } catch (KeyNotFoundException e) {
+                    // The tag type does not support artwork.
+                }
+
+                // Write to a temporary copy so the user's original file is never modified.
+                workingCopy = createWorkingCopy(originalFile);
+                f.setFile(workingCopy);
+                AudioFileIO.write(f);
+
+                result.success(buildEditedFilePayload(
+                        workingCopy, getExtensionUsingString(originalFile.getPath())));
 
             } catch (Exception e) {
                 result.error("SetArtworkError", e.getMessage(), e.getCause());
                 Log.e("FlutterAudioTagger", "SetArtwork error: " + e.getMessage());
+            } finally {
+                deleteWorkingCopy(workingCopy);
             }
         }else if(call.method.equals("setTagsAndArtwork")){
+            File workingCopy = null;
             try {
-
-                //File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
                 Map<String, Object> arguments = (Map<String, Object>) call.arguments;
                 String filePath = (String) arguments.get("filePath");
@@ -300,15 +279,14 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                 String lyrics = (String) arguments.get("lyrics");
                 byte[] artworkdata = (byte[]) arguments.get("artwork");
 
+                if (filePath == null || filePath.isEmpty()) {
+                    result.error("No specified path", "please specify the music file path.", null);
+                    return;
+                }
+
                 File originalFile = new File(filePath);
                 AudioFile audioFile = AudioFileIO.read(originalFile);
                 Tag tag = audioFile.getTagOrCreateDefault();
-
-
-                if (filePath == null) {
-                    result.error("No specified path", "please specify the music file path.", "");
-                    return;
-                }
                 if (artist != null) {
 
                         tag.deleteField(FieldKey.ARTIST);
@@ -368,31 +346,35 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
                         tag.setField(FieldKey.QUALITY, quality);
                    
                 }
-                Artwork artwork = new AndroidArtwork();
+                // Artwork is optional: when it is null the existing cover is left untouched.
+                if (artworkdata != null) {
+                    Artwork artwork = new AndroidArtwork();
                     artwork.setBinaryData(artworkdata);
-                    artwork.setMimeType("image/jpeg");
+                    artwork.setMimeType(getArtworkMimeType(artworkdata));
                     artwork.setPictureType(PictureTypes.DEFAULT_ID);
                     try {
                         tag.deleteArtworkField();
                         tag.setField(artwork);
-                       
                     } catch (KeyNotFoundException e) {
-                        //throw new RuntimeException(e);
+                        // The tag type does not support artwork.
                     }
+                }
                 audioFile.setTag(tag);
+
+                // Write to a temporary copy so the user's original file is never modified.
+                workingCopy = createWorkingCopy(originalFile);
+                audioFile.setFile(workingCopy);
                 AudioFileIO.write(audioFile);
-//              
-                byte[] music_data = Files.readAllBytes(Paths.get(audioFile.getFile().getPath()));
-                String extensionOfTheFile = getExtensionUsingString(audioFile.getFile().getPath());
-                Map<String, Object> payload = new HashMap<>();
-                payload.put("musicData", music_data);
-                payload.put("extension", extensionOfTheFile);
-                result.success(payload);
+
+                result.success(buildEditedFilePayload(
+                        workingCopy, getExtensionUsingString(originalFile.getPath())));
 
             } catch (Exception e) {
                 Log.e("FlutterAudioTagger", "SetTagsWithArtwork error: " + e.getMessage());
                 result.error("SetTagsWithArtworkError", e.getMessage(), e.getCause());
 
+            } finally {
+                deleteWorkingCopy(workingCopy);
             }
 
         }
@@ -406,6 +388,67 @@ public class FlutterAudioTaggerPlugin implements FlutterPlugin, MethodCallHandle
         channel.setMethodCallHandler(null);
     }
 
+    /**
+     * Copies the source file into the app cache directory.
+     *
+     * <p>Tag edits are applied to this throw-away copy so the user's original file is never
+     * modified: the plugin's contract is to return the edited bytes and let the app decide
+     * where to save them.</p>
+     */
+    private File createWorkingCopy(File source) throws IOException {
+        String name = source.getName();
+        int lastDotIndex = name.lastIndexOf('.');
+        String suffix = lastDotIndex > 0 ? name.substring(lastDotIndex) : ".tmp";
+        File workingCopy = File.createTempFile("flutter_audio_tagger_", suffix, context.getCacheDir());
+        Files.copy(source.toPath(), workingCopy.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        return workingCopy;
+    }
+
+    private Map<String, Object> buildEditedFilePayload(File file, String extension) throws IOException {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("musicData", Files.readAllBytes(file.toPath()));
+        payload.put("extension", extension);
+        return payload;
+    }
+
+    private void deleteWorkingCopy(File file) {
+        if (file != null && !file.delete()) {
+            Log.w("FlutterAudioTagger", "Could not delete temporary file: " + file.getPath());
+        }
+    }
+
+    /**
+     * Detects the image type from its magic bytes so the embedded artwork is not always
+     * labelled as JPEG (which breaks PNG/GIF covers in some players).
+     */
+    String getArtworkMimeType(byte[] data) {
+        if (data.length >= 3
+                && (data[0] & 0xFF) == 0xFF
+                && (data[1] & 0xFF) == 0xD8
+                && (data[2] & 0xFF) == 0xFF) {
+            return "image/jpeg";
+        }
+        if (data.length >= 8
+                && (data[0] & 0xFF) == 0x89
+                && data[1] == 'P' && data[2] == 'N' && data[3] == 'G'
+                && data[4] == 0x0D && data[5] == 0x0A
+                && data[6] == 0x1A && data[7] == 0x0A) {
+            return "image/png";
+        }
+        if (data.length >= 4
+                && data[0] == 'G' && data[1] == 'I' && data[2] == 'F' && data[3] == '8') {
+            return "image/gif";
+        }
+        if (data.length >= 2 && data[0] == 'B' && data[1] == 'M') {
+            return "image/bmp";
+        }
+        if (data.length >= 12
+                && data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F'
+                && data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P') {
+            return "image/webp";
+        }
+        return "image/jpeg";
+    }
 
     private String addEditedSuffix(String filePath) {
         File file = new File(filePath);
