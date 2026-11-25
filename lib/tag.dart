@@ -34,7 +34,7 @@ class Tag {
       album: map['album'] as String?,
       year: map['year'] as String?,
       genre: map['genre'] as String?,
-      lyrics: map['lyrics'] as String,
+      lyrics: map['lyrics'] as String?,
       language: map['language'] as String?,
       composer: map['composer'] as String?,
       country: map['country'] as String?,

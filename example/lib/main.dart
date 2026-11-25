@@ -109,8 +109,10 @@ class _MainPageState extends State<MainPage> {
         artwork: tag?.artwork,
       );
 
-      // Save the changes
-      await flutterAudioTagger.editTags(updatedTag, currentFilePath!);
+      // The plugin does not write the original file, so persist the edited bytes here.
+      final editedFile =
+          await flutterAudioTagger.editTags(updatedTag, currentFilePath!);
+      await File(currentFilePath!).writeAsBytes(editedFile.musicData, flush: true);
 
       // Force UI state update BEFORE refreshing tags
       setState(() {
@@ -189,7 +191,10 @@ class _MainPageState extends State<MainPage> {
 
         Uint8List imageData = await imageFile.readAsBytes();
 
-        await flutterAudioTagger.setArtWork(imageData, currentFilePath!);
+        final editedFile =
+            await flutterAudioTagger.setArtWork(imageData, currentFilePath!);
+        await File(currentFilePath!).writeAsBytes(editedFile.musicData,
+            flush: true);
 
         // Refresh tags to get updated artwork
         tag = await flutterAudioTagger.getAllTags(currentFilePath!);

@@ -177,7 +177,7 @@ AudioFileData result = await tagger.editTagsAndArtwork(tagWithArtwork, '/path/to
 
 ## Saving the edited file
 
-Every editing method returns an `AudioFileData` object. The plugin does **not** write the file to disk. Your app receives the raw bytes and is responsible for saving them. Use `dart:io` to write the bytes to any path your app has access to.
+Every editing method returns an `AudioFileData` object. The plugin does **not** write the file to disk and never modifies the original audio file: it edits a temporary copy, returns the raw bytes, and deletes the copy. Your app receives the bytes and is responsible for saving them. Use `dart:io` to write the bytes to any path your app has access to.
 
 ```dart
 import 'dart:io';

@@ -33,17 +33,12 @@ class FlutterAudioTagger {
 
   Future<Tag?> getAllTags(String path) async {
     // this method is used to get the tags also the cover image of the song
-    try {
-      Tag tag = Tag();
-      late Map<dynamic, dynamic>? data;
-      data = await getTags(path);
-      Uint8List? artwork = await getArtWork(path);
-      data!['artwork'] = artwork;
-      tag = Tag.fromMap(data);
-      return tag;
-    } catch (e) {
-      rethrow;
+    final data = await getTags(path);
+    if (data == null) {
+      return null;
     }
+    final artwork = await getArtWork(path);
+    return Tag.fromMap({...data, 'artwork': artwork});
   }
 
   Future<AudioFileData> editTagsAndArtwork(Tag tag, String path) async {
@@ -90,6 +85,9 @@ class FlutterAudioTagger {
 
   Future<AudioFileData> setArtWork(Uint8List? imageData, String path) async {
     //this method is used to edit the image cover of the song, make sure that the imageData is not null
+    if (imageData == null) {
+      throw ArgumentError.notNull('imageData');
+    }
 
     try {
       Map<String, dynamic> artwork = {'artwork': imageData, 'filePath': path};
